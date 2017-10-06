@@ -1,11 +1,12 @@
 package com.codephillip.app.imageupload;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.StrictMode;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -13,6 +14,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -36,6 +38,7 @@ public class MainActivity extends AppCompatActivity {
     private final String URL = "https://chapchapafrica.com/attach_file.php";
     private TextView textTargetUri;
     private ImageView targetImage;
+    private ProgressDialog pDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         textTargetUri = (TextView)findViewById(R.id.targeturi);
         targetImage = (ImageView)findViewById(R.id.targetimage);
+        pDialog = new ProgressDialog(this);
     }
 
     /**
@@ -50,8 +54,8 @@ public class MainActivity extends AppCompatActivity {
      * */
     public void uploadImage(View view) {
         Log.d(TAG, "uploadImage: clicked");
-//        openGallery();
-        openCamera();
+        openGallery();
+//        openCamera();
     }
 
     private void openCamera() {
@@ -59,29 +63,6 @@ public class MainActivity extends AppCompatActivity {
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
             startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
         }
-    }
-
-    private File convertBitmapToFile(@NonNull Bitmap bitmap) {
-        try {
-            // use getCacheDir to temporarily store the file
-            File file = new File(getCacheDir(), "image.png");
-            file.createNewFile();
-
-            //Convert bitmap to byte array
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.PNG, 0, bos);
-            byte[] bitmapdata = bos.toByteArray();
-
-            //write the bytes in file
-            FileOutputStream fos = new FileOutputStream(file);
-            fos.write(bitmapdata);
-            fos.flush();
-            fos.close();
-            return file;
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
     }
 
     private void openGallery() {
@@ -113,27 +94,89 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        initialiseImageUpload(bitmap);
+        SendImageTask task = new SendImageTask();
+        task.execute(bitmap);
     }
 
-    private void initialiseImageUpload(Bitmap bitmap) {
+
+    private class SendImageTask extends AsyncTask<Bitmap, Integer, String> {
+        @Override
+        protected String doInBackground(Bitmap... bitmap) {
+
+            try {
+                return initialiseImageUpload(bitmap[0]);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            displayProgressDialog();
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            dismissProgressDialog();
+            Toast.makeText(MainActivity.this, "Uploaded image", Toast.LENGTH_SHORT).show();
+            Log.d(TAG, "onPostExecute: " + result);
+        }
+    }
+
+    private String initialiseImageUpload(Bitmap bitmap) {
         try {
             if (bitmap != null) {
                 // first convert bitmap because Okhttp only accepts files or URIs
                 File file = convertBitmapToFile(bitmap);
                 String response = sendImageToServer(file, "0756878434");
+//                String response = sendImageToServer(uri, "0756878434");
                 Log.d(TAG, "onActivityResult: RESPONSE " + response);
+                return response;
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return null;
+    }
+
+    private File convertBitmapToFile(@NonNull Bitmap bitmap) {
+        try {
+            // use getCacheDir to temporarily store the file
+            File file = new File(getCacheDir(), "image.png");
+            file.createNewFile();
+
+            //Convert bitmap to byte array
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.PNG, 0, bos);
+            byte[] bitmapdata = bos.toByteArray();
+
+            //write the bytes in file
+            FileOutputStream fos = new FileOutputStream(file);
+            fos.write(bitmapdata);
+            fos.flush();
+            fos.close();
+            return file;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private void displayProgressDialog() {
+        pDialog.setMessage("Please wait...");
+        pDialog.setCancelable(false);
+        pDialog.show();
+    }
+
+    private void dismissProgressDialog() {
+        if (pDialog.isShowing())
+            pDialog.dismiss();
     }
 
     private String sendImageToServer(File file, String phoneNumber) throws IOException {
         Log.d(TAG, "sendImageToServer: started");
-        //todo replace with asynctask
-        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
-        StrictMode.setThreadPolicy(policy);
 
         try {
             MediaType MEDIA_TYPE_PNG = MediaType.parse("image/png");
@@ -153,11 +196,14 @@ public class MainActivity extends AppCompatActivity {
         return "Network failure";
     }
 
+
+
+    /**
+     * Incase you store the image in gallery, pass the URI.
+     * This seems to give a high quality image compared to converting the bitmap to file
+     */
     private String sendImageToServer(String fileUri, String phoneNumber) throws IOException {
         Log.d(TAG, "sendImageToServer: started");
-        //todo replace with asynctask
-        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
-        StrictMode.setThreadPolicy(policy);
 
         try {
             MediaType MEDIA_TYPE_PNG = MediaType.parse("image/png");
