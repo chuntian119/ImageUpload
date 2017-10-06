@@ -13,7 +13,8 @@ import android.widget.Toast;
 
 public class LocationService extends Service {
     public static final String BROADCAST_ACTION = "Location Changed";
-    private static final int TWO_MINUTES = 1000 * 60 * 2;
+    // todo finally on much time to wait for new location. We thought of 5-15 minutes
+    private static final int FIVE_MINUTES = 1000 * 60 * 5;
     public LocationManager locationManager;
     public MyLocationListener listener;
     public Location previousBestLocation = null;
@@ -29,7 +30,7 @@ public class LocationService extends Service {
     public void onStart(Intent intent, int startId) {
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         listener = new MyLocationListener();
-        //todo place android permissions
+        // todo place android permissions
         locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 4000, 0, listener);
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 4000, 0, listener);
     }
@@ -47,8 +48,8 @@ public class LocationService extends Service {
 
         // Check whether the new location fix is newer or older
         long timeDelta = location.getTime() - currentBestLocation.getTime();
-        boolean isSignificantlyNewer = timeDelta > TWO_MINUTES;
-        boolean isSignificantlyOlder = timeDelta < -TWO_MINUTES;
+        boolean isSignificantlyNewer = timeDelta > FIVE_MINUTES;
+        boolean isSignificantlyOlder = timeDelta < -FIVE_MINUTES;
         boolean isNewer = timeDelta > 0;
 
         // If it's been more than two minutes since the current location, use the new location
