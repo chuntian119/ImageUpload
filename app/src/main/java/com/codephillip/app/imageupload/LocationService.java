@@ -1,7 +1,6 @@
 package com.codephillip.app.imageupload;
 
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
 import android.location.LocationListener;
@@ -15,6 +14,8 @@ public class LocationService extends Service {
     public static final String BROADCAST_ACTION = "Location Changed";
     // todo finally on much time to wait for new location. We thought of 5-15 minutes
     private static final int FIVE_MINUTES = 1000 * 60 * 5;
+    private static final String TAG = LocationService.class.getSimpleName();
+    private static final String RESTART_SERVICE_ACTION = "restart_service_action";
     public LocationManager locationManager;
     public MyLocationListener listener;
     public Location previousBestLocation = null;
@@ -28,11 +29,14 @@ public class LocationService extends Service {
 
     @Override
     public void onStart(Intent intent, int startId) {
-        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        listener = new MyLocationListener();
-        // todo place android permissions
-        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 4000, 0, listener);
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 4000, 0, listener);
+        Log.d(TAG, "onStart: service started");
+        Toast.makeText(this, "Service started", Toast.LENGTH_LONG).show();
+
+//        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+//        listener = new MyLocationListener();
+//        // todo place android permissions
+//        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 4000, 0, listener);
+//        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 4000, 0, listener);
     }
 
     @Override
@@ -99,29 +103,33 @@ public class LocationService extends Service {
         // handler.removeCallbacks(sendUpdatesToUI);
         super.onDestroy();
         Log.v("STOP_SERVICE", "DONE");
-        locationManager.removeUpdates(listener);
+//        Intent intent = new Intent(this, LocationReceiver.class);
+//        sendBroadcast(intent);
+        //todo activate
+//        locationManager.removeUpdates(listener);
     }
 
-    public static Thread performOnBackgroundThread(final Runnable runnable) {
-        final Thread t = new Thread() {
-            @Override
-            public void run() {
-                try {
-                    runnable.run();
-                } finally {
-
-                }
-            }
-        };
-        t.start();
-        return t;
-    }
+//    public static Thread performOnBackgroundThread(final Runnable runnable) {
+//        final Thread t = new Thread() {
+//            @Override
+//            public void run() {
+//                try {
+//                    runnable.run();
+//                } finally {
+//
+//                }
+//            }
+//        };
+//        t.start();
+//        return t;
+//    }
 
 
     public class MyLocationListener implements LocationListener {
 
         public void onLocationChanged(final Location loc) {
             Log.i("Location", "Location changed");
+            Log.d(TAG, "onLocationChanged: LAT LONG PROV: " + loc.getLatitude() + loc.getLongitude() + loc.getProvider());
             if (isBetterLocation(loc, previousBestLocation)) {
                 loc.getLatitude();
                 loc.getLongitude();

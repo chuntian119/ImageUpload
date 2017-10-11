@@ -35,6 +35,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final int REQUEST_IMAGE_CAPTURE = 3569;
     private static final int REQUEST_GALLERY_IMAGE = 5884;
+    private static final int REQUEST_CODE = 0;
     private final String URL = "https://chapchapafrica.com/attach_file.php";
     private TextView textTargetUri;
     private ImageView targetImage;
@@ -47,6 +48,9 @@ public class MainActivity extends AppCompatActivity {
         textTargetUri = (TextView)findViewById(R.id.targeturi);
         targetImage = (ImageView)findViewById(R.id.targetimage);
         pDialog = new ProgressDialog(this);
+
+        Intent intent = new Intent(this, LocationReceiver.class);
+        sendBroadcast(intent);
     }
 
     /**
@@ -130,7 +134,7 @@ public class MainActivity extends AppCompatActivity {
             if (bitmap != null) {
                 // first convert bitmap because Okhttp only accepts files or URIs
                 File file = convertBitmapToFile(bitmap);
-                String response = sendImageToServer(file, "0756878434");
+                String response = sendImageToServer(file, "0756878437");
 //                String response = sendImageToServer(uri, "0756878434");
                 Log.d(TAG, "onActivityResult: RESPONSE " + response);
                 return response;
