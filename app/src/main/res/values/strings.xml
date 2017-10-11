@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">ImageUpload</string>
+    <string name="content_authority">com.codephillip.app.imageupload.provider</string>
+    <string name="sync_account_type">com.codephillip.app.imageupload</string>
 </resources>

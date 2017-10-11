@@ -30,6 +30,8 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
+import static com.codephillip.app.imageupload.sync.SyncAdapter.initializeSyncAdapter;
+
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -49,8 +51,10 @@ public class MainActivity extends AppCompatActivity {
         targetImage = (ImageView)findViewById(R.id.targetimage);
         pDialog = new ProgressDialog(this);
 
-        Intent intent = new Intent(this, LocationReceiver.class);
-        sendBroadcast(intent);
+//        Intent intent = new Intent(this, LocationReceiver.class);
+//        sendBroadcast(intent);
+        initializeSyncAdapter(this);
+//        syncImmediately(this);
     }
 
     /**
